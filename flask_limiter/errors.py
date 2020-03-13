@@ -5,7 +5,7 @@ errors and exceptions
 from distutils.version import LooseVersion
 from pkg_resources import get_distribution
 from six import text_type
-from werkzeug import exceptions
+from werkzeug import exceptions, Response
 
 werkzeug_exception = None
 werkzeug_version = get_distribution("werkzeug").version
@@ -40,4 +40,4 @@ class RateLimitExceeded(werkzeug_exception):
             ) else limit.error_message()
         else:
             description = text_type(limit.limit)
-        super(RateLimitExceeded, self).__init__(description=description, response=code)
+        super(RateLimitExceeded, self).__init__(description=description, response=Response(self.get_body(), code, self.get_headers()))
