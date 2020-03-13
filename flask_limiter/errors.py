@@ -28,39 +28,9 @@ class RateLimitExceeded(werkzeug_exception):
         self.limit = limit
 
         # Set defaults
-        code = 429
-        exception = exceptions.TooManyRequests
-        body = self.get_body()
-        headers = self.get_headers()
-
-        # If error is given, get body & headers
-        if limit.error_code:
-            code = limit.error_code
-            exception = exceptions.HTTPException
-
-            # Some common error codes, can add more here	
-            if code == 400:	
-                exception = exceptions.BadRequest
-            elif code == 401:	
-                exception = exceptions.Unauthorized	
-            elif code == 403:	
-                exception = exceptions.Forbidden	
-            elif code == 404:	
-                exception = exceptions.NotFound	
-            elif code == 405:	
-                exception = exceptions.MethodNotAllowed	
-            elif code == 406:	
-                exception = exceptions.NotAcceptable	
-            elif code == 418:	
-                exception = exceptions.ImATeapot # <3	
-            elif code == 500:	
-                exception = exceptions.InternalServerError	
-            elif code == 501:	
-                exception = exceptions.NotImplemented	
-
-            # Update body & headers
-            body = exception().get_body()
-            headers = exception().get_headers()
+        self.code = 429
+        self.body = self.get_body()
+        self.headers = self.get_headers()
 
         # Get the description
         if limit.error_message:
@@ -68,5 +38,40 @@ class RateLimitExceeded(werkzeug_exception):
                 limit.error_message
             ) else limit.error_message()
         else:
-            description = text_type(limit.limit)
-        super(RateLimitExceeded, self).__init__(description=description, response=Response(self.get_body(), code, self.get_headers()))
+            self.description = text_type(limit.limit)
+
+        # If error is given, get body & headers
+        if self.limit.error_code:
+            self.code = limit.error_code
+            exception = exceptions.HTTPException(description=description)
+
+            # Some common error codes, can add more here	
+            if self.code == 400:	
+                exception = exceptions.BadRequest(description=description)
+            elif self.code == 401:	
+                exception = exceptions.Unauthorized(description=description)
+            elif self.code == 403:	
+                exception = exceptions.Forbidden(description=description)
+            elif self.code == 404:	
+                exception = exceptions.NotFound(description=description)
+            elif self.code == 405:	
+                exception = exceptions.MethodNotAllowed(description=description)
+            elif self.code == 406:	
+                exception = exceptions.NotAcceptable(description=description)
+            elif self.code == 418:	
+                exception = exceptions.ImATeapot(description=description) # <3	
+            elif self.code == 500:	
+                exception = exceptions.InternalServerError(description=description)
+            elif self.code == 501:	
+                exception = exceptions.NotImplemented(description=description)
+
+            # Update body & headers
+            self.body = exception.get_body()
+            self.headers = exception.get_headers()
+        else:
+            exception = exceptions.TooManyRequests(description=description)
+            
+            # Update body & headers
+            self.body = exception.get_body()
+            self.headers = exception.get_headers()
+        super(RateLimitExceeded, self).__init__(description=self.description, response=Response(self.body, code, self.headers))
