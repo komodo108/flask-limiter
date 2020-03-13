@@ -47,23 +47,23 @@ class RateLimitExceeded(werkzeug_exception):
 
             # Some common error codes, can add more here	
             if self.code == 400:	
-                exception = exceptions.BadRequest(description=self.description)
+                exception = exceptions.BadRequest()
             elif self.code == 401:	
-                exception = exceptions.Unauthorized(description=self.description)
+                exception = exceptions.Unauthorized()
             elif self.code == 403:	
-                exception = exceptions.Forbidden(description=self.description)
+                exception = exceptions.Forbidden()
             elif self.code == 404:	
-                exception = exceptions.NotFound(description=self.description)
+                exception = exceptions.NotFound()
             elif self.code == 405:	
-                exception = exceptions.MethodNotAllowed(description=self.description)
+                exception = exceptions.MethodNotAllowed()
             elif self.code == 406:	
-                exception = exceptions.NotAcceptable(description=self.description)
+                exception = exceptions.NotAcceptable()
             elif self.code == 418:	
-                exception = exceptions.ImATeapot(description=self.description) # <3	
+                exception = exceptions.ImATeapot() # <3	
             elif self.code == 500:	
-                exception = exceptions.InternalServerError(description=self.description)
+                exception = exceptions.InternalServerError()
             elif self.code == 501:	
-                exception = exceptions.NotImplemented(description=self.description)
+                exception = exceptions.NotImplemented()
 
             # Update body & headers
             self.body = exception.get_body()
