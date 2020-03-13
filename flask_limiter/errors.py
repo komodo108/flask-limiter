@@ -34,7 +34,7 @@ class RateLimitExceeded(werkzeug_exception):
 
         # Get the description
         if limit.error_message:
-            description = limit.error_message if not callable(
+            self.description = limit.error_message if not callable(
                 limit.error_message
             ) else limit.error_message()
         else:
@@ -43,34 +43,34 @@ class RateLimitExceeded(werkzeug_exception):
         # If error is given, get body & headers
         if self.limit.error_code:
             self.code = limit.error_code
-            exception = exceptions.HTTPException(description=description)
+            exception = exceptions.HTTPException(description=self.description)
 
             # Some common error codes, can add more here	
             if self.code == 400:	
-                exception = exceptions.BadRequest(description=description)
+                exception = exceptions.BadRequest(description=self.description)
             elif self.code == 401:	
-                exception = exceptions.Unauthorized(description=description)
+                exception = exceptions.Unauthorized(description=self.description)
             elif self.code == 403:	
-                exception = exceptions.Forbidden(description=description)
+                exception = exceptions.Forbidden(description=self.description)
             elif self.code == 404:	
-                exception = exceptions.NotFound(description=description)
+                exception = exceptions.NotFound(description=self.description)
             elif self.code == 405:	
-                exception = exceptions.MethodNotAllowed(description=description)
+                exception = exceptions.MethodNotAllowed(description=self.description)
             elif self.code == 406:	
-                exception = exceptions.NotAcceptable(description=description)
+                exception = exceptions.NotAcceptable(description=self.description)
             elif self.code == 418:	
-                exception = exceptions.ImATeapot(description=description) # <3	
+                exception = exceptions.ImATeapot(description=self.description) # <3	
             elif self.code == 500:	
-                exception = exceptions.InternalServerError(description=description)
+                exception = exceptions.InternalServerError(description=self.description)
             elif self.code == 501:	
-                exception = exceptions.NotImplemented(description=description)
+                exception = exceptions.NotImplemented(description=self.description)
 
             # Update body & headers
             self.body = exception.get_body()
             self.headers = exception.get_headers()
         else:
-            exception = exceptions.TooManyRequests(description=description)
-            
+            exception = exceptions.TooManyRequests(description=self.description)
+
             # Update body & headers
             self.body = exception.get_body()
             self.headers = exception.get_headers()
