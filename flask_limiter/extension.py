@@ -17,7 +17,7 @@ from limits.strategies import STRATEGIES
 from werkzeug.http import http_date, parse_date
 
 from flask_limiter.wrappers import Limit, LimitGroup
-from .errors import RateLimitExceeded, RateLimitExceededInternal
+from .errors import RateLimitExceeded, beforeRaise
 from .util import get_ipaddr
 
 
@@ -407,7 +407,7 @@ class Limiter(object):
         g.view_rate_limit = limit_for_header
 
         if failed_limit:
-            raise RateLimitExceededInternal(failed_limit)
+            beforeRaise(failed_limit)
 
     def __check_request_limit(self, in_middleware=True):
         endpoint = request.endpoint or ""
@@ -516,7 +516,7 @@ class Limiter(object):
                         all_limits += list(itertools.chain(*self._default_limits))
             self.__evaluate_limits(endpoint, all_limits)
         except Exception as e:  # no qa
-            if isinstance(e, RateLimitExceeded) or isinstance(e, RateLimitExceededInternal):
+            if isinstance(e, RateLimitExceeded):
                 six.reraise(*sys.exc_info())
             if self._in_memory_fallback_enabled and not self._storage_dead:
                 self.logger.warn(
