@@ -27,13 +27,42 @@ class RateLimitExceeded(werkzeug_exception):
     def __init__(self, limit):
         self.limit = limit
 
+        # Set defaults
         code = 429
         exception = exceptions.TooManyRequests
+        body = self.get_body()
+        headers = self.get_headers()
 
+        # If error is given, get body & headers
         if limit.error_code:
             code = limit.error_code
             exception = exceptions.HTTPException
 
+            # Some common error codes, can add more here	
+            if code == 400:	
+                exception = exceptions.BadRequest
+            elif code == 401:	
+                exception = exceptions.Unauthorized	
+            elif code == 403:	
+                exception = exceptions.Forbidden	
+            elif code == 404:	
+                exception = exceptions.NotFound	
+            elif code == 405:	
+                exception = exceptions.MethodNotAllowed	
+            elif code == 406:	
+                exception = exceptions.NotAcceptable	
+            elif code == 418:	
+                exception = exceptions.ImATeapot # <3	
+            elif code == 500:	
+                exception = exceptions.InternalServerError	
+            elif code == 501:	
+                exception = exceptions.NotImplemented	
+
+            # Update body & headers
+            body = exception.get_body()
+            headers = exception.get_headers()
+
+        # Get the description
         if limit.error_message:
             description = limit.error_message if not callable(
                 limit.error_message
