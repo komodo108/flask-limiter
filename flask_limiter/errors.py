@@ -67,14 +67,6 @@ class RateLimitExceeded(werkzeug_exception):
     The exception results in ``abort(limit.error_code)`` being called.
     """
     code = internal_code
-    limit = None
 
     def __init__(self, description):
-        self.limit = limit
-        if limit.error_message:
-            description = limit.error_message if not callable(
-                limit.error_message
-            ) else limit.error_message()
-        else:
-            description = text_type(limit.limit)
         super(RateLimitExceeded, self).__init__(description=description)
