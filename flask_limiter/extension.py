@@ -17,7 +17,7 @@ from limits.strategies import STRATEGIES
 from werkzeug.http import http_date, parse_date
 
 from flask_limiter.wrappers import Limit, LimitGroup
-from .errors import RateLimitExceeded, beforeRaise
+from .errors import RateLimitExceeded
 from .util import get_ipaddr
 
 
@@ -407,7 +407,7 @@ class Limiter(object):
         g.view_rate_limit = limit_for_header
 
         if failed_limit:
-            beforeRaise(failed_limit)
+            raise RateLimitExceeded(failed_limit)
 
     def __check_request_limit(self, in_middleware=True):
         endpoint = request.endpoint or ""
