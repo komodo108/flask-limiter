@@ -135,7 +135,7 @@ class Limiter(object):
                 [
                     LimitGroup(
                         limit, self._key_func, None, False, None, None, None,
-                        None
+                        None, None
                     )
                 ]
             )
@@ -143,7 +143,7 @@ class Limiter(object):
             self._application_limits.extend(
                 [
                     LimitGroup(
-                        limit, self._key_func, "global", False, None, None,
+                        limit, self._key_func, "global", False, None, None, None,
                         None, None
                     )
                 ]
@@ -153,7 +153,7 @@ class Limiter(object):
                 [
                     LimitGroup(
                         limit, self._key_func, None, False, None, None, None,
-                        None
+                        None, None
                     )
                 ]
             )
@@ -233,7 +233,7 @@ class Limiter(object):
         if not self._application_limits and app_limits:
             self._application_limits = [
                 LimitGroup(
-                    app_limits, self._key_func, "global", False, None, None,
+                    app_limits, self._key_func, "global", False, None, None, None,
                     None, None
                 )
             ]
@@ -246,7 +246,7 @@ class Limiter(object):
         if not self._default_limits and conf_limits:
             self._default_limits = [
                 LimitGroup(
-                    conf_limits, self._key_func, None, False, None, None, None,
+                    conf_limits, self._key_func, None, False, None, None, None, None,
                     None
                 )
             ]
@@ -258,7 +258,7 @@ class Limiter(object):
         if not self._in_memory_fallback and fallback_limits:
             self._in_memory_fallback = [
                 LimitGroup(
-                    fallback_limits, self._key_func, None, False, None, None,
+                    fallback_limits, self._key_func, None, False, None, None, None,
                     None, None
                 )
             ]
@@ -474,7 +474,7 @@ class Limiter(object):
                                 Limit(
                                     limit.limit, limit.key_func, limit.scope,
                                     limit.per_method, limit.methods,
-                                    limit.error_message, limit.exempt_when,
+                                    limit.error_message, limit.error_code, limit.exempt_when,
                                     limit.override_defaults
                                 ) for limit in limit_group
                             ]
@@ -542,6 +542,7 @@ class Limiter(object):
         per_method=False,
         methods=None,
         error_message=None,
+        error_code=None,
         exempt_when=None,
         override_defaults=True,
     ):
@@ -557,14 +558,14 @@ class Limiter(object):
             if callable(limit_value):
                 dynamic_limit = LimitGroup(
                     limit_value, func, _scope, per_method, methods,
-                    error_message, exempt_when, override_defaults
+                    error_message, error_code, exempt_when, override_defaults
                 )
             else:
                 try:
                     static_limits = list(
                         LimitGroup(
                             limit_value, func, _scope, per_method, methods,
-                            error_message, exempt_when, override_defaults
+                            error_message, error_code, exempt_when, override_defaults
                         )
                     )
                 except ValueError as e:
@@ -608,6 +609,7 @@ class Limiter(object):
         per_method=False,
         methods=None,
         error_message=None,
+        error_code=None,
         exempt_when=None,
         override_defaults=True
     ):
@@ -624,6 +626,7 @@ class Limiter(object):
          limited (default: None).
         :param error_message: string (or callable that returns one) to override the
          error message used in the response.
+        :param error_code: int to override the error code used in the response (429).
         :param function exempt_when: function/lambda used to decide if the rate limit
          should skipped.
         :param bool override_defaults:  whether the decorated limit overrides the default
@@ -635,6 +638,7 @@ class Limiter(object):
             per_method=per_method,
             methods=methods,
             error_message=error_message,
+            error_code=error_code,
             exempt_when=exempt_when,
             override_defaults=override_defaults
         )
@@ -644,6 +648,7 @@ class Limiter(object):
         limit_value,
         scope,
         key_func=None,
+        error_code=None,
         error_message=None,
         exempt_when=None,
         override_defaults=True
@@ -659,6 +664,7 @@ class Limiter(object):
          the rate limit. defaults to remote address of the request.
         :param error_message: string (or callable that returns one) to override the
          error message used in the response.
+        :param error_code: int to override the error code used in the response (429).
         :param function exempt_when: function/lambda used to decide if the rate limit
          should skipped.
         :param bool override_defaults:  whether the decorated limit overrides the default
@@ -670,6 +676,7 @@ class Limiter(object):
             True,
             scope,
             error_message=error_message,
+            error_code=error_code,
             exempt_when=exempt_when,
             override_defaults=override_defaults
         )

@@ -23,6 +23,7 @@ from flask_limiter.extension import C, Limiter, HEADERS
 from flask_limiter.util import get_remote_address, get_ipaddr
 from tests import FlaskLimiterTestCase
 
+# TODO: Should really add more tests here
 
 class ConfigurationTests(FlaskLimiterTestCase):
     def test_invalid_strategy(self):

@@ -1,0 +1,1427 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Flask-Limiter &#8212; Flask-Limiter 1.2.1 documentation</title>
+    <link rel="stylesheet" href="_static/limiter.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="shortcut icon" href="_static/tap-icon.png"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head><body>
+  
+  
+  <div class=indexwrapper>
+  
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">Flask-Limiter 1.2.1 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="flask-limiter">
+<h1>Flask-Limiter<a class="headerlink" href="#flask-limiter" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="installation">
+<h3>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">Flask</span><span class="o">-</span><span class="n">Limiter</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="quick-start">
+<h3>Quick start<a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flask</span> <span class="kn">import</span> <span class="n">Flask</span>
+<span class="kn">from</span> <span class="nn">flask_limiter</span> <span class="kn">import</span> <span class="n">Limiter</span>
+<span class="kn">from</span> <span class="nn">flask_limiter.util</span> <span class="kn">import</span> <span class="n">get_remote_address</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="n">limiter</span> <span class="o">=</span> <span class="n">Limiter</span><span class="p">(</span>
+    <span class="n">app</span><span class="p">,</span>
+    <span class="n">key_func</span><span class="o">=</span><span class="n">get_remote_address</span><span class="p">,</span>
+    <span class="n">default_limits</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;200 per day&quot;</span><span class="p">,</span> <span class="s2">&quot;50 per hour&quot;</span><span class="p">]</span>
+<span class="p">)</span>
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/slow&quot;</span><span class="p">)</span>
+<span class="nd">@limiter</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="s2">&quot;1 per day&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">slow</span><span class="p">():</span>
+    <span class="k">return</span> <span class="s2">&quot;:(&quot;</span>
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/medium&quot;</span><span class="p">)</span>
+<span class="nd">@limiter</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="s2">&quot;1/second&quot;</span><span class="p">,</span> <span class="n">override_defaults</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">medium</span><span class="p">():</span>
+    <span class="k">return</span> <span class="s2">&quot;:|&quot;</span>
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/fast&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">fast</span><span class="p">():</span>
+    <span class="k">return</span> <span class="s2">&quot;:)&quot;</span>
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/ping&quot;</span><span class="p">)</span>
+<span class="nd">@limiter</span><span class="o">.</span><span class="n">exempt</span>
+<span class="k">def</span> <span class="nf">ping</span><span class="p">():</span>
+    <span class="k">return</span> <span class="s2">&quot;PONG&quot;</span>
+</pre></div>
+</div>
+<p>The above Flask app will have the following rate limiting characteristics:</p>
+<ul class="simple">
+<li><p>Rate limiting by <cite>remote_address</cite> of the request</p></li>
+<li><p>A default rate limit of 200 per day, and 50 per hour applied to all routes.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">slow</span></code> route having an explicit rate limit decorator will bypass the default
+rate limit and only allow 1 request per day.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">medium</span></code> route inherits the default limits and adds on a decorated limit
+of 1 request per second.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">ping</span></code> route will be exempt from any default rate limits.</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The built in flask static files routes are also exempt from rate limits.</p>
+</div>
+<p>Every time a request exceeds the rate limit, the view function will not get called and instead
+a <a class="reference external" href="http://tools.ietf.org/html/rfc6585#section-4">429</a> http error will be raised.</p>
+</div>
+<div class="section" id="the-flask-limiter-extension">
+<h3>The Flask-Limiter extension<a class="headerlink" href="#the-flask-limiter-extension" title="Permalink to this headline">¶</a></h3>
+<p>The extension can be initialized with the <a class="reference external" href="https://flask.palletsprojects.com/en/1.1.x/api/#flask.Flask" title="(in Flask v1.1.x)"><code class="xref py py-class docutils literal notranslate"><span class="pre">flask.Flask</span></code></a> application
+in the usual ways.</p>
+<p>Using the constructor</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flask_limiter</span> <span class="kn">import</span> <span class="n">Limiter</span>
+<span class="kn">from</span> <span class="nn">flask_limiter.util</span> <span class="kn">import</span> <span class="n">get_remote_address</span>
+<span class="o">....</span>
+
+<span class="n">limiter</span> <span class="o">=</span> <span class="n">Limiter</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">key_func</span><span class="o">=</span><span class="n">get_remote_address</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Deferred app initialization using <code class="docutils literal notranslate"><span class="pre">init_app</span></code></p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">limiter</span> <span class="o">=</span> <span class="n">Limiter</span><span class="p">(</span><span class="n">key_func</span><span class="o">=</span><span class="n">get_remote_address</span><span class="p">)</span>
+<span class="n">limiter</span><span class="o">.</span><span class="n">init_app</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="rate-limit-domain">
+<span id="ratelimit-domain"></span><h3>Rate Limit Domain<a class="headerlink" href="#rate-limit-domain" title="Permalink to this headline">¶</a></h3>
+<p>Each <a class="reference internal" href="#flask_limiter.Limiter" title="flask_limiter.Limiter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Limiter</span></code></a> instance is initialized with a <cite>key_func</cite> which returns the bucket
+in which each request is put into when evaluating whether it is within the rate limit or not.</p>
+<div class="admonition danger">
+<p class="admonition-title">Danger</p>
+<p>Earlier versions of Flask-Limiter defaulted the rate limiting domain to the requesting users’ ip-address retreived via the <a class="reference internal" href="#flask_limiter.util.get_ipaddr" title="flask_limiter.util.get_ipaddr"><code class="xref py py-func docutils literal notranslate"><span class="pre">flask_limiter.util.get_ipaddr()</span></code></a> function. This behavior is being deprecated (since version <cite>0.9.2</cite>) as it can be susceptible to ip spoofing with certain environment setups (more details at <a class="reference external" href="https://github.com/alisaifee/flask-limiter/issues/41">github issue #41</a> &amp; <a class="reference external" href="http://esd.io/blog/flask-apps-heroku-real-ip-spoofing.html">flask apps and ip spoofing</a>).</p>
+</div>
+<p>It is now recommended to explicitly provide a keying function as part of the <a class="reference internal" href="#flask_limiter.Limiter" title="flask_limiter.Limiter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Limiter</span></code></a>
+initialization (<a class="reference internal" href="#keyfunc-customization"><span class="std std-ref">Rate Limit Key Functions</span></a>). Two utility methods are still provided:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#flask_limiter.util.get_ipaddr" title="flask_limiter.util.get_ipaddr"><code class="xref py py-func docutils literal notranslate"><span class="pre">flask_limiter.util.get_ipaddr()</span></code></a>: uses the last ip address in the <cite>X-Forwarded-For</cite> header, else falls back to the <cite>remote_address</cite> of the request</p></li>
+<li><p><a class="reference internal" href="#flask_limiter.util.get_remote_address" title="flask_limiter.util.get_remote_address"><code class="xref py py-func docutils literal notranslate"><span class="pre">flask_limiter.util.get_remote_address()</span></code></a>: uses the <cite>remote_address</cite> of the request.</p></li>
+</ul>
+<p>Please refer to <a class="reference internal" href="#deploy-behind-proxy"><span class="std std-ref">Deploying an application behind a proxy</span></a> for an example.</p>
+</div>
+<div class="section" id="decorators">
+<h3>Decorators<a class="headerlink" href="#decorators" title="Permalink to this headline">¶</a></h3>
+<p>The decorators made available as instance methods of the <a class="reference internal" href="#flask_limiter.Limiter" title="flask_limiter.Limiter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Limiter</span></code></a>
+instance are</p>
+<dl id="ratelimit-decorator-limit">
+<dt><a class="reference internal" href="#flask_limiter.Limiter.limit" title="flask_limiter.Limiter.limit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Limiter.limit()</span></code></a></dt><dd><p>There are a few ways of using this decorator depending on your preference and use-case.</p>
+<dl>
+<dt>Single decorator</dt><dd><p>The limit string can be a single limit or a delimiter separated string</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;....&quot;</span><span class="p">)</span>
+<span class="nd">@limiter</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="s2">&quot;100/day;10/hour;1/minute&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">my_route</span><span class="p">()</span>
+  <span class="o">...</span>
+</pre></div>
+</div>
+</div></blockquote>
+</dd>
+<dt>Multiple decorators</dt><dd><p>The limit string can be a single limit or a delimiter separated string
+or a combination of both.</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;....&quot;</span><span class="p">)</span>
+<span class="nd">@limiter</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="s2">&quot;100/day&quot;</span><span class="p">)</span>
+<span class="nd">@limiter</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="s2">&quot;10/hour&quot;</span><span class="p">)</span>
+<span class="nd">@limiter</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="s2">&quot;1/minute&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">my_route</span><span class="p">():</span>
+  <span class="o">...</span>
+</pre></div>
+</div>
+</div></blockquote>
+</dd>
+<dt>Custom keying function</dt><dd><p>By default rate limits are applied based on the key function that the <a class="reference internal" href="#flask_limiter.Limiter" title="flask_limiter.Limiter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Limiter</span></code></a> instance
+was initialized with. You can implement your own function to retrieve the key to rate limit by
+when decorating individual routes. Take a look at <a class="reference internal" href="#keyfunc-customization"><span class="std std-ref">Rate Limit Key Functions</span></a> for some examples..</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">my_key_func</span><span class="p">():</span>
+  <span class="o">...</span>
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;...&quot;</span><span class="p">)</span>
+<span class="nd">@limiter</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="s2">&quot;100/day&quot;</span><span class="p">,</span> <span class="n">my_key_func</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">my_route</span><span class="p">():</span>
+  <span class="o">...</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The key function  is called from within a
+<a class="reference external" href="https://flask.palletsprojects.com/en/1.1.x/reqcontext/#request-context" title="(in Flask v1.1.x)"><span class="xref std std-ref">flask request context</span></a>.</p>
+</div>
+</div></blockquote>
+</dd>
+<dt>Dynamically loaded limit string(s)</dt><dd><p>There may be situations where the rate limits need to be retrieved from
+sources external to the code (database, remote api, etc…). This can be
+achieved by providing a callable to the decorator.</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">rate_limit_from_config</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">current_app</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;CUSTOM_LIMIT&quot;</span><span class="p">,</span> <span class="s2">&quot;10/s&quot;</span><span class="p">)</span>
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;...&quot;</span><span class="p">)</span>
+<span class="nd">@limiter</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="n">rate_limit_from_config</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">my_route</span><span class="p">():</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<div class="admonition danger">
+<p class="admonition-title">Danger</p>
+<p>The provided callable will be called for every request
+on the decorated route. For expensive retrievals, consider
+caching the response.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The callable is called from within a
+<a class="reference external" href="https://flask.palletsprojects.com/en/1.1.x/reqcontext/#request-context" title="(in Flask v1.1.x)"><span class="xref std std-ref">flask request context</span></a>.</p>
+</div>
+</div></blockquote>
+</dd>
+<dt>Exemption conditions</dt><dd><p>Each limit can be exempted when given conditions are fulfilled. These
+conditions can be specified by supplying a callable as an
+<code class="docutils literal notranslate"><span class="pre">`exempt_when`</span></code> argument when defining the limit.</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/expensive&quot;</span><span class="p">)</span>
+<span class="nd">@limiter</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="s2">&quot;100/day&quot;</span><span class="p">,</span> <span class="n">exempt_when</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">current_user</span><span class="o">.</span><span class="n">is_admin</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">expensive_route</span><span class="p">():</span>
+  <span class="o">...</span>
+</pre></div>
+</div>
+</div></blockquote>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl id="ratelimit-decorator-shared-limit">
+<dt><a class="reference internal" href="#flask_limiter.Limiter.shared_limit" title="flask_limiter.Limiter.shared_limit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Limiter.shared_limit()</span></code></a></dt><dd><p>For scenarios where a rate limit should be shared by multiple routes
+(For example when you want to protect routes using the same resource
+with an umbrella rate limit).</p>
+<p>Named shared limit</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mysql_limit</span> <span class="o">=</span> <span class="n">limiter</span><span class="o">.</span><span class="n">shared_limit</span><span class="p">(</span><span class="s2">&quot;100/hour&quot;</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="s2">&quot;mysql&quot;</span><span class="p">)</span>
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;..&quot;</span><span class="p">)</span>
+<span class="nd">@mysql_limit</span>
+<span class="k">def</span> <span class="nf">r1</span><span class="p">():</span>
+   <span class="o">...</span>
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;..&quot;</span><span class="p">)</span>
+<span class="nd">@mysql_limit</span>
+<span class="k">def</span> <span class="nf">r2</span><span class="p">():</span>
+   <span class="o">...</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Dynamic shared limit: when a callable is passed as scope, the return value
+of the function will be used as the scope. Note that the callable takes one argument: a string representing
+the request endpoint.</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">host_scope</span><span class="p">(</span><span class="n">endpoint_name</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">request</span><span class="o">.</span><span class="n">host</span>
+<span class="n">host_limit</span> <span class="o">=</span> <span class="n">limiter</span><span class="o">.</span><span class="n">shared_limit</span><span class="p">(</span><span class="s2">&quot;100/hour&quot;</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="n">host_scope</span><span class="p">)</span>
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;..&quot;</span><span class="p">)</span>
+<span class="nd">@host_limit</span>
+<span class="k">def</span> <span class="nf">r1</span><span class="p">():</span>
+   <span class="o">...</span>
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;..&quot;</span><span class="p">)</span>
+<span class="nd">@host_limit</span>
+<span class="k">def</span> <span class="nf">r2</span><span class="p">():</span>
+   <span class="o">...</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Shared rate limits provide the same conveniences as individual rate limits</p>
+<ul class="simple">
+<li><p>Can be chained with other shared limits or individual limits</p></li>
+<li><p>Accept keying functions</p></li>
+<li><p>Accept callables to determine the rate limit value</p></li>
+</ul>
+</div>
+</dd>
+</dl>
+<dl class="simple" id="ratelimit-decorator-exempt">
+<dt><a class="reference internal" href="#flask_limiter.Limiter.exempt" title="flask_limiter.Limiter.exempt"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Limiter.exempt()</span></code></a></dt><dd><p>This decorator simply marks a route as being exempt from any rate limits.</p>
+</dd>
+</dl>
+<dl id="ratelimit-decorator-request-filter">
+<dt><a class="reference internal" href="#flask_limiter.Limiter.request_filter" title="flask_limiter.Limiter.request_filter"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Limiter.request_filter()</span></code></a></dt><dd><p>This decorator simply marks a function as a filter for requests that are going to be tested for rate limits. If any of the request filters return <code class="docutils literal notranslate"><span class="pre">True</span></code> no
+rate limiting will be performed for that request. This mechanism can be used to
+create custom white lists.</p>
+<blockquote>
+<div><blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@limiter</span><span class="o">.</span><span class="n">request_filter</span>
+<span class="k">def</span> <span class="nf">header_whitelist</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">request</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;X-Internal&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;true&quot;</span>
+
+<span class="nd">@limiter</span><span class="o">.</span><span class="n">request_filter</span>
+<span class="k">def</span> <span class="nf">ip_whitelist</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">request</span><span class="o">.</span><span class="n">remote_addr</span> <span class="o">==</span> <span class="s2">&quot;127.0.0.1&quot;</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>In the above example, any request that contains the header <code class="docutils literal notranslate"><span class="pre">X-Internal:</span> <span class="pre">true</span></code>
+or originates from localhost will not be rate limited.</p>
+</div></blockquote>
+</dd>
+</dl>
+</div>
+</div>
+<div class="section" id="configuration">
+<span id="ratelimit-conf"></span><h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
+<p>The following flask configuration values are honored by
+<a class="reference internal" href="#flask_limiter.Limiter" title="flask_limiter.Limiter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Limiter</span></code></a>. If the corresponding configuration value is passed in through
+the <a class="reference internal" href="#flask_limiter.Limiter" title="flask_limiter.Limiter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Limiter</span></code></a> constructor, those will take precedence.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 24%" />
+<col style="width: 76%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">RATELIMIT_GLOBAL</span></code></p></td>
+<td><div class="deprecated">
+<p><span class="versionmodified deprecated">Deprecated since version 0.9.4.: </span>Use <code class="docutils literal notranslate"><span class="pre">RATELIMIT_DEFAULT</span></code> instead.</p>
+</div>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RATELIMIT_DEFAULT</span></code></p></td>
+<td><p>A comma (or some other delimiter) separated string
+that will be used to apply a default limit on all
+routes. If not provided, the default limits can be
+passed to the <a class="reference internal" href="#flask_limiter.Limiter" title="flask_limiter.Limiter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Limiter</span></code></a> constructor
+as well (the values passed to the constructor take precedence
+over those in the config). <a class="reference internal" href="#ratelimit-string"><span class="std std-ref">Rate limit string notation</span></a> for details.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">RATELIMIT_DEFAULTS_PER_METHOD</span></code></p></td>
+<td><p>Whether default limits are applied per method, per route or as a
+combination of all method per route.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RATELIMIT_APPLICATION</span></code></p></td>
+<td><p>A comma (or some other delimiter) separated string
+that will be used to apply limits to the application as a whole (i.e. shared
+by all routes).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">RATELIMIT_STORAGE_URL</span></code></p></td>
+<td><p>A storage location conforming to the scheme in <a class="reference external" href="https://limits.readthedocs.io/en/latest/storage.html#storage-scheme" title="(in limits v1.5+5.g6787aec.dirty)"><span>Storage scheme</span></a>.
+A basic in-memory storage can be used by specifying <code class="docutils literal notranslate"><span class="pre">memory://</span></code> though this
+should probably never be used in production. Some supported backends include:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Memcached: <code class="docutils literal notranslate"><span class="pre">memcached://host:port</span></code></p></li>
+<li><p>Redis: <code class="docutils literal notranslate"><span class="pre">redis://host:port</span></code></p></li>
+<li><p>GAE Memcached: <code class="docutils literal notranslate"><span class="pre">gaememcached://host:port</span></code></p></li>
+</ul>
+</div></blockquote>
+<p>For specific examples and requirements of supported backends please refer to <a class="reference external" href="https://limits.readthedocs.io/en/latest/storage.html#storage-scheme" title="(in limits v1.5+5.g6787aec.dirty)"><span>Storage scheme</span></a>.</p>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RATELIMIT_STORAGE_OPTIONS</span></code></p></td>
+<td><p>A dictionary to set extra options to be passed to the
+storage implementation upon initialization. (Useful if you’re
+subclassing <a class="reference external" href="https://limits.readthedocs.io/en/latest/api.html#limits.storage.Storage" title="(in limits v1.5+5.g6787aec.dirty)"><code class="xref py py-class docutils literal notranslate"><span class="pre">limits.storage.Storage</span></code></a> to create a
+custom Storage backend.)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">RATELIMIT_STRATEGY</span></code></p></td>
+<td><p>The rate limiting strategy to use.  <a class="reference internal" href="#ratelimit-strategy"><span class="std std-ref">Rate limiting strategies</span></a>
+for details.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RATELIMIT_HEADERS_ENABLED</span></code></p></td>
+<td><p>Enables returning <a class="reference internal" href="#ratelimit-headers"><span class="std std-ref">Rate-limiting Headers</span></a>. Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">RATELIMIT_ENABLED</span></code></p></td>
+<td><p>Overall kill switch for rate limits. Defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RATELIMIT_HEADER_LIMIT</span></code></p></td>
+<td><p>Header for the current rate limit. Defaults to <code class="docutils literal notranslate"><span class="pre">X-RateLimit-Limit</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">RATELIMIT_HEADER_RESET</span></code></p></td>
+<td><p>Header for the reset time of the current rate limit. Defaults to <code class="docutils literal notranslate"><span class="pre">X-RateLimit-Reset</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RATELIMIT_HEADER_REMAINING</span></code></p></td>
+<td><p>Header for the number of requests remaining in the current rate limit. Defaults to <code class="docutils literal notranslate"><span class="pre">X-RateLimit-Remaining</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">RATELIMIT_HEADER_RETRY_AFTER</span></code></p></td>
+<td><p>Header for when the client should retry the request. Defaults to <code class="docutils literal notranslate"><span class="pre">Retry-After</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RATELIMIT_HEADER_RETRY_AFTER_VALUE</span></code></p></td>
+<td><p>Allows configuration of how the value of the <cite>Retry-After</cite> header is rendered. One of <cite>http-date</cite> or <cite>delta-seconds</cite>. (<a class="reference external" href="https://tools.ietf.org/html/rfc2616#section-14.37">RFC2616</a>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">RATELIMIT_SWALLOW_ERRORS</span></code></p></td>
+<td><p>Whether to allow failures while attempting to perform a rate limit
+such as errors with downstream storage. Setting this value to <code class="docutils literal notranslate"><span class="pre">True</span></code>
+will effectively disable rate limiting for requests where an error has
+occurred.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RATELIMIT_IN_MEMORY_FALLBACK_ENABLED</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code>/<code class="docutils literal notranslate"><span class="pre">False</span></code>. If enabled an in memory rate limiter will be used
+as a fallback when the configured storage is down. Note that, when used in
+combination with <code class="docutils literal notranslate"><span class="pre">RATELIMIT_IN_MEMORY_FALLBACK</span></code> the original rate limits
+will not be inherited and the values provided in</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">RATELIMIT_IN_MEMORY_FALLBACK</span></code></p></td>
+<td><p>A comma (or some other delimiter) separated string
+that will be used when the configured storage is down.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RATELIMIT_KEY_PREFIX</span></code></p></td>
+<td><p>Prefix that is prepended to each stored rate limit key. This can be useful when using a
+shared storage for multiple applications or rate limit domains.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="rate-limit-string-notation">
+<span id="ratelimit-string"></span><h2>Rate limit string notation<a class="headerlink" href="#rate-limit-string-notation" title="Permalink to this headline">¶</a></h2>
+<p>Rate limits are specified as strings following the format:</p>
+<blockquote>
+<div><p>[count] [per|/] [n (optional)] [second|minute|hour|day|month|year]</p>
+</div></blockquote>
+<p>You can combine multiple rate limits by separating them with a delimiter of your
+choice.</p>
+<div class="section" id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>10 per hour</p></li>
+<li><p>10/hour</p></li>
+<li><p>10/hour;100/day;2000 per year</p></li>
+<li><p>100/day, 500/7days</p></li>
+</ul>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>If rate limit strings that are provided to the <a class="reference internal" href="#flask_limiter.Limiter.limit" title="flask_limiter.Limiter.limit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Limiter.limit()</span></code></a>
+decorator are malformed and can’t be parsed the decorated route will fall back
+to the default rate limit(s) and an <code class="docutils literal notranslate"><span class="pre">ERROR</span></code> log message will be emitted. Refer
+to <a class="reference internal" href="#logging"><span class="std std-ref">Logging</span></a> for more details on capturing this information. Malformed
+default rate limit strings will however raise an exception as they are evaluated
+early enough to not cause disruption to a running application.</p>
+</div>
+</div>
+</div>
+<div class="section" id="rate-limiting-strategies">
+<span id="ratelimit-strategy"></span><h2>Rate limiting strategies<a class="headerlink" href="#rate-limiting-strategies" title="Permalink to this headline">¶</a></h2>
+<p>Flask-Limiter comes with three different rate limiting strategies built-in. Pick
+the one that works for your use-case by specifying it in your flask config as
+<code class="docutils literal notranslate"><span class="pre">RATELIMIT_STRATEGY</span></code> (one of <code class="docutils literal notranslate"><span class="pre">fixed-window</span></code>, <code class="docutils literal notranslate"><span class="pre">fixed-window-elastic-expiry</span></code>,
+or <code class="docutils literal notranslate"><span class="pre">moving-window</span></code>), or as a constructor keyword argument. The default
+configuration is <code class="docutils literal notranslate"><span class="pre">fixed-window</span></code>.</p>
+<div class="section" id="fixed-window">
+<h3>Fixed Window<a class="headerlink" href="#fixed-window" title="Permalink to this headline">¶</a></h3>
+<p>This is the most memory efficient strategy to use as it maintains one counter
+per resource and rate limit. It does however have its drawbacks as it allows
+bursts within each window - thus allowing an ‘attacker’ to by-pass the limits.
+The effects of these bursts can be partially circumvented by enforcing multiple
+granularities of windows per resource.</p>
+<p>For example, if you specify a <code class="docutils literal notranslate"><span class="pre">100/minute</span></code> rate limit on a route, this strategy will
+allow 100 hits in the last second of one window and a 100 more in the first
+second of the next window. To ensure that such bursts are managed, you could add a second rate limit
+of <code class="docutils literal notranslate"><span class="pre">2/second</span></code> on the same route.</p>
+</div>
+<div class="section" id="fixed-window-with-elastic-expiry">
+<h3>Fixed Window with Elastic Expiry<a class="headerlink" href="#fixed-window-with-elastic-expiry" title="Permalink to this headline">¶</a></h3>
+<p>This strategy works almost identically to the Fixed Window strategy with the exception
+that each hit results in the extension of the window. This strategy works well for
+creating large penalties for breaching a rate limit.</p>
+<p>For example, if you specify a <code class="docutils literal notranslate"><span class="pre">100/minute</span></code> rate limit on a route and it is being
+attacked at the rate of 5 hits per second for 2 minutes - the attacker will be locked
+out of the resource for an extra 60 seconds after the last hit. This strategy helps
+circumvent bursts.</p>
+</div>
+<div class="section" id="moving-window">
+<h3>Moving Window<a class="headerlink" href="#moving-window" title="Permalink to this headline">¶</a></h3>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The moving window strategy is only implemented for the <code class="docutils literal notranslate"><span class="pre">redis</span></code> and <code class="docutils literal notranslate"><span class="pre">in-memory</span></code>
+storage backends. The strategy requires using a list with fast random access which
+is not very convenient to implement with a memcached storage.</p>
+</div>
+<p>This strategy is the most effective for preventing bursts from by-passing the
+rate limit as the window for each limit is not fixed at the start and end of each time unit
+(i.e. N/second for a moving window means N in the last 1000 milliseconds). There is
+however a higher memory cost associated with this strategy as it requires <code class="docutils literal notranslate"><span class="pre">N</span></code> items to
+be maintained in memory per resource and rate limit.</p>
+</div>
+</div>
+<div class="section" id="rate-limiting-headers">
+<span id="ratelimit-headers"></span><h2>Rate-limiting Headers<a class="headerlink" href="#rate-limiting-headers" title="Permalink to this headline">¶</a></h2>
+<p>If the configuration is enabled, information about the rate limit with respect to the
+route being requested will be added to the response headers. Since multiple rate limits
+can be active for a given route - the rate limit with the lowest time granularity will be
+used in the scenario when the request does not breach any rate limits.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 28%" />
+<col style="width: 72%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">X-RateLimit-Limit</span></code></p></td>
+<td><p>The total number of requests allowed for the
+active window</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">X-RateLimit-Remaining</span></code></p></td>
+<td><p>The number of requests remaining in the active
+window.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">X-RateLimit-Reset</span></code></p></td>
+<td><p>UTC seconds since epoch when the window will be
+reset.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Retry-After</span></code></p></td>
+<td><p>Seconds to retry after or the http date when the
+Rate Limit will be reset. The way the value is presented
+depends on the configuration value set in <cite>RATELIMIT_HEADER_RETRY_AFTER_VALUE</cite>
+and defaults to <cite>delta-seconds</cite>.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Enabling the headers has an additional cost with certain storage / strategy combinations.</p>
+<ul class="simple">
+<li><p>Memcached + Fixed Window: an extra key per rate limit is stored to calculate
+<code class="docutils literal notranslate"><span class="pre">X-RateLimit-Reset</span></code></p></li>
+<li><p>Redis + Moving Window: an extra call to redis is involved during every request
+to calculate <code class="docutils literal notranslate"><span class="pre">X-RateLimit-Remaining</span></code> and <code class="docutils literal notranslate"><span class="pre">X-RateLimit-Reset</span></code></p></li>
+</ul>
+</div>
+<p>The header names can be customised if required by either using the flask configuration (<a class="reference internal" href="#ratelimit-conf"><span class="std std-ref">Configuration</span></a>)
+values or by setting the <code class="docutils literal notranslate"><span class="pre">header_mapping</span></code> property of the <a class="reference internal" href="#flask_limiter.Limiter" title="flask_limiter.Limiter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Limiter</span></code></a> as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flask_limiter</span> <span class="kn">import</span> <span class="n">Limiter</span><span class="p">,</span> <span class="n">HEADERS</span>
+<span class="n">limiter</span> <span class="o">=</span> <span class="n">Limiter</span><span class="p">()</span>
+<span class="n">limiter</span><span class="o">.</span><span class="n">header_mapping</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">HEADERS</span><span class="o">.</span><span class="n">LIMIT</span> <span class="p">:</span> <span class="s2">&quot;X-My-Limit&quot;</span><span class="p">,</span>
+    <span class="n">HEADERS</span><span class="o">.</span><span class="n">RESET</span> <span class="p">:</span> <span class="s2">&quot;X-My-Reset&quot;</span><span class="p">,</span>
+    <span class="n">HEADERS</span><span class="o">.</span><span class="n">REMAINING</span><span class="p">:</span> <span class="s2">&quot;X-My-Remaining&quot;</span>
+<span class="p">}</span>
+<span class="c1"># or by only partially specifying the overrides</span>
+<span class="n">limiter</span><span class="o">.</span><span class="n">header_mapping</span><span class="p">[</span><span class="n">HEADERS</span><span class="o">.</span><span class="n">LIMIT</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;X-My-Limit&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="recipes">
+<h2>Recipes<a class="headerlink" href="#recipes" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="rate-limit-key-functions">
+<span id="keyfunc-customization"></span><h3>Rate Limit Key Functions<a class="headerlink" href="#rate-limit-key-functions" title="Permalink to this headline">¶</a></h3>
+<p>You can easily customize your rate limits to be based on any
+characteristic of the incoming request. Both the <a class="reference internal" href="#flask_limiter.Limiter" title="flask_limiter.Limiter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Limiter</span></code></a> constructor
+and the <a class="reference internal" href="#flask_limiter.Limiter.limit" title="flask_limiter.Limiter.limit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Limiter.limit()</span></code></a> decorator accept a keyword argument
+<code class="docutils literal notranslate"><span class="pre">key_func</span></code> that should return a string (or an object that has a string representation).</p>
+<p>Rate limiting a route by current user (using Flask-Login):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@route</span><span class="p">(</span><span class="s2">&quot;/test&quot;</span><span class="p">)</span>
+<span class="nd">@login_required</span>
+<span class="nd">@limiter</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="s2">&quot;1 per day&quot;</span><span class="p">,</span> <span class="n">key_func</span> <span class="o">=</span> <span class="k">lambda</span> <span class="p">:</span> <span class="n">current_user</span><span class="o">.</span><span class="n">username</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">test_route</span><span class="p">():</span>
+    <span class="k">return</span> <span class="s2">&quot;42&quot;</span>
+</pre></div>
+</div>
+<p>Rate limiting all requests by country:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flask</span> <span class="kn">import</span> <span class="n">request</span><span class="p">,</span> <span class="n">Flask</span>
+<span class="kn">import</span> <span class="nn">GeoIP</span>
+<span class="n">gi</span> <span class="o">=</span> <span class="n">GeoIP</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;GeoLiteCity.dat&quot;</span><span class="p">,</span> <span class="n">GeoIP</span><span class="o">.</span><span class="n">GEOIP_INDEX_CACHE</span> <span class="o">|</span> <span class="n">GeoIP</span><span class="o">.</span><span class="n">GEOIP_CHECK_CACHE</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">get_request_country</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">gi</span><span class="o">.</span><span class="n">record_by_name</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">remote_addr</span><span class="p">)[</span><span class="s1">&#39;region_name&#39;</span><span class="p">]</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="n">limiter</span> <span class="o">=</span> <span class="n">Limiter</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">default_limits</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;10/hour&quot;</span><span class="p">],</span> <span class="n">key_func</span> <span class="o">=</span> <span class="n">get_request_country</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="custom-rate-limit-exceeded-responses">
+<h3>Custom Rate limit exceeded responses<a class="headerlink" href="#custom-rate-limit-exceeded-responses" title="Permalink to this headline">¶</a></h3>
+<p>The default configuration results in an <code class="docutils literal notranslate"><span class="pre">abort(429)</span></code> being called every time
+a rate limit is exceeded for a particular route. The exceeded limit is added to
+the response and results in an response body that looks something like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 3.2 Final//EN&quot;&gt;
+&lt;title&gt;429 Too Many Requests&lt;/title&gt;
+&lt;h1&gt;Too Many Requests&lt;/h1&gt;
+&lt;p&gt;1 per 1 day&lt;/p&gt;
+</pre></div>
+</div>
+<p>If you want to configure the response you can register an error handler for the
+<code class="docutils literal notranslate"><span class="pre">429</span></code> error code in a manner similar to the following example, which returns a
+json response instead:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@app</span><span class="o">.</span><span class="n">errorhandler</span><span class="p">(</span><span class="mi">429</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">ratelimit_handler</span><span class="p">(</span><span class="n">e</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">make_response</span><span class="p">(</span>
+            <span class="n">jsonify</span><span class="p">(</span><span class="n">error</span><span class="o">=</span><span class="s2">&quot;ratelimit exceeded </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">e</span><span class="o">.</span><span class="n">description</span><span class="p">)</span>
+            <span class="p">,</span> <span class="mi">429</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="using-flask-pluggable-views">
+<h3>Using Flask Pluggable Views<a class="headerlink" href="#using-flask-pluggable-views" title="Permalink to this headline">¶</a></h3>
+<p>If you are using a class based approach to defining view function, the regular
+method of decorating a view function to apply a per route rate limit will not
+work. You can add rate limits to your view classes using the following approach.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="n">limiter</span> <span class="o">=</span> <span class="n">Limiter</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">key_func</span><span class="o">=</span><span class="n">get_remote_address</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">MyView</span><span class="p">(</span><span class="n">flask</span><span class="o">.</span><span class="n">views</span><span class="o">.</span><span class="n">MethodView</span><span class="p">):</span>
+    <span class="n">decorators</span> <span class="o">=</span> <span class="p">[</span><span class="n">limiter</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="s2">&quot;10/second&quot;</span><span class="p">)]</span>
+    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;get&quot;</span>
+
+    <span class="k">def</span> <span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;put&quot;</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This approach is limited to either sharing the same rate limit for
+all http methods of a given <a class="reference external" href="https://flask.palletsprojects.com/en/1.1.x/api/#flask.views.View" title="(in Flask v1.1.x)"><code class="xref py py-class docutils literal notranslate"><span class="pre">flask.views.View</span></code></a> or applying the declared
+rate limit independently for each http method (to accomplish this, pass in <code class="docutils literal notranslate"><span class="pre">True</span></code> to
+the <code class="docutils literal notranslate"><span class="pre">per_method</span></code> keyword argument to <a class="reference internal" href="#flask_limiter.Limiter.limit" title="flask_limiter.Limiter.limit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Limiter.limit()</span></code></a>). Alternatively, the limit
+can be restricted to only certain http methods by passing them as a list to the <cite>methods</cite>
+keyword argument.</p>
+</div>
+<p>The above approach has been tested with sub-classes of  <a class="reference external" href="https://flask.palletsprojects.com/en/1.1.x/api/#flask.views.View" title="(in Flask v1.1.x)"><code class="xref py py-class docutils literal notranslate"><span class="pre">flask.views.View</span></code></a>,
+<a class="reference external" href="https://flask.palletsprojects.com/en/1.1.x/api/#flask.views.MethodView" title="(in Flask v1.1.x)"><code class="xref py py-class docutils literal notranslate"><span class="pre">flask.views.MethodView</span></code></a> and <code class="xref py py-class docutils literal notranslate"><span class="pre">flask.ext.restful.Resource</span></code>.</p>
+</div>
+<div class="section" id="rate-limiting-all-routes-in-a-flask-blueprint">
+<h3>Rate limiting all routes in a <a class="reference external" href="https://flask.palletsprojects.com/en/1.1.x/api/#flask.Blueprint" title="(in Flask v1.1.x)"><code class="xref py py-class docutils literal notranslate"><span class="pre">flask.Blueprint</span></code></a><a class="headerlink" href="#rate-limiting-all-routes-in-a-flask-blueprint" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="#flask_limiter.Limiter.limit" title="flask_limiter.Limiter.limit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Limiter.limit()</span></code></a>, <a class="reference internal" href="#flask_limiter.Limiter.shared_limit" title="flask_limiter.Limiter.shared_limit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Limiter.shared_limit()</span></code></a> &amp; <a class="reference internal" href="#flask_limiter.Limiter.exempt" title="flask_limiter.Limiter.exempt"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Limiter.exempt()</span></code></a> can
+all be applied to <a class="reference external" href="https://flask.palletsprojects.com/en/1.1.x/api/#flask.Blueprint" title="(in Flask v1.1.x)"><code class="xref py py-class docutils literal notranslate"><span class="pre">flask.Blueprint</span></code></a> instances as well. In the following example
+the <strong>login</strong> Blueprint has a special rate limit applied to all its routes, while the <strong>help</strong>
+Blueprint is exempt from all rate limits. The <strong>regular</strong> Blueprint follows the default rate limits.</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="n">login</span> <span class="o">=</span> <span class="n">Blueprint</span><span class="p">(</span><span class="s2">&quot;login&quot;</span><span class="p">,</span> <span class="vm">__name__</span><span class="p">,</span> <span class="n">url_prefix</span> <span class="o">=</span> <span class="s2">&quot;/login&quot;</span><span class="p">)</span>
+<span class="n">regular</span> <span class="o">=</span> <span class="n">Blueprint</span><span class="p">(</span><span class="s2">&quot;regular&quot;</span><span class="p">,</span> <span class="vm">__name__</span><span class="p">,</span> <span class="n">url_prefix</span> <span class="o">=</span> <span class="s2">&quot;/regular&quot;</span><span class="p">)</span>
+<span class="n">doc</span> <span class="o">=</span> <span class="n">Blueprint</span><span class="p">(</span><span class="s2">&quot;doc&quot;</span><span class="p">,</span> <span class="vm">__name__</span><span class="p">,</span> <span class="n">url_prefix</span> <span class="o">=</span> <span class="s2">&quot;/doc&quot;</span><span class="p">)</span>
+
+<span class="nd">@doc</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">doc_index</span><span class="p">():</span>
+    <span class="k">return</span> <span class="s2">&quot;doc&quot;</span>
+
+<span class="nd">@regular</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">regular_index</span><span class="p">():</span>
+    <span class="k">return</span> <span class="s2">&quot;regular&quot;</span>
+
+<span class="nd">@login</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">login_index</span><span class="p">():</span>
+    <span class="k">return</span> <span class="s2">&quot;login&quot;</span>
+
+
+<span class="n">limiter</span> <span class="o">=</span> <span class="n">Limiter</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">default_limits</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;1/second&quot;</span><span class="p">],</span> <span class="n">key_func</span><span class="o">=</span><span class="n">get_remote_address</span><span class="p">)</span>
+<span class="n">limiter</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="s2">&quot;60/hour&quot;</span><span class="p">)(</span><span class="n">login</span><span class="p">)</span>
+<span class="n">limiter</span><span class="o">.</span><span class="n">exempt</span><span class="p">(</span><span class="n">doc</span><span class="p">)</span>
+
+<span class="n">app</span><span class="o">.</span><span class="n">register_blueprint</span><span class="p">(</span><span class="n">doc</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">register_blueprint</span><span class="p">(</span><span class="n">login</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">register_blueprint</span><span class="p">(</span><span class="n">regular</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="logging">
+<span id="id2"></span><h3>Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h3>
+<p>Each <a class="reference internal" href="#flask_limiter.Limiter" title="flask_limiter.Limiter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Limiter</span></code></a> instance has a <code class="docutils literal notranslate"><span class="pre">logger</span></code> instance variable that is by
+default <strong>not</strong> configured with a handler. You can add your own handler to obtain
+log messages emitted by <code class="xref py py-mod docutils literal notranslate"><span class="pre">flask_limiter</span></code>.</p>
+<p>Simple stdout handler:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">limiter</span> <span class="o">=</span> <span class="n">Limiter</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">key_func</span><span class="o">=</span><span class="n">get_remote_address</span><span class="p">)</span>
+<span class="n">limiter</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">StreamHandler</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>Reusing all the handlers of the <code class="docutils literal notranslate"><span class="pre">logger</span></code> instance of the <a class="reference external" href="https://flask.palletsprojects.com/en/1.1.x/api/#flask.Flask" title="(in Flask v1.1.x)"><code class="xref py py-class docutils literal notranslate"><span class="pre">flask.Flask</span></code></a> app:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="n">limiter</span> <span class="o">=</span> <span class="n">Limiter</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">key_func</span><span class="o">=</span><span class="n">get_remote_address</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">handler</span> <span class="ow">in</span> <span class="n">app</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">handlers</span><span class="p">:</span>
+    <span class="n">limiter</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">handler</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="custom-error-messages">
+<h3>Custom error messages<a class="headerlink" href="#custom-error-messages" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="#flask_limiter.Limiter.limit" title="flask_limiter.Limiter.limit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Limiter.limit()</span></code></a> &amp; <a class="reference internal" href="#flask_limiter.Limiter.shared_limit" title="flask_limiter.Limiter.shared_limit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Limiter.shared_limit()</span></code></a> can be provided with an <cite>error_message</cite>
+argument to over ride the default <cite>n per x</cite> error message that is returned to the calling client.
+The <cite>error_message</cite> argument can either be a simple string or a callable that returns one.</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="n">limiter</span> <span class="o">=</span> <span class="n">Limiter</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">key_func</span><span class="o">=</span><span class="n">get_remote_address</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">error_handler</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;DEFAULT_ERROR_MESSAGE&quot;</span><span class="p">)</span>
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+<span class="nd">@limiter</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="s2">&quot;1/second&quot;</span><span class="p">,</span> <span class="n">error_message</span><span class="o">=</span><span class="s1">&#39;chill!&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">index</span><span class="p">():</span>
+    <span class="o">....</span>
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/ping&quot;</span><span class="p">)</span>
+<span class="nd">@limiter</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="s2">&quot;10/second&quot;</span><span class="p">,</span> <span class="n">error_message</span><span class="o">=</span><span class="n">error_handler</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">ping</span><span class="p">():</span>
+    <span class="o">....</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="deploying-an-application-behind-a-proxy">
+<span id="deploy-behind-proxy"></span><h3>Deploying an application behind a proxy<a class="headerlink" href="#deploying-an-application-behind-a-proxy" title="Permalink to this headline">¶</a></h3>
+<p>If your application is behind a proxy and you are using werkzeug &gt; 0.9+ you can use the <code class="xref py py-class docutils literal notranslate"><span class="pre">werkzeug.contrib.fixers.ProxyFix</span></code>
+fixer to reliably get the remote address of the user, while protecting your application against ip spoofing via headers.</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flask</span> <span class="kn">import</span> <span class="n">Flask</span>
+<span class="kn">from</span> <span class="nn">flask_limiter</span> <span class="kn">import</span> <span class="n">Limiter</span>
+<span class="kn">from</span> <span class="nn">flask_limiter.util</span> <span class="kn">import</span> <span class="n">get_remote_address</span>
+<span class="kn">from</span> <span class="nn">werkzeug.contrib.fixers</span> <span class="kn">import</span> <span class="n">ProxyFix</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="c1"># for example if the request goes through one proxy</span>
+<span class="c1"># before hitting your application server</span>
+<span class="n">app</span><span class="o">.</span><span class="n">wsgi_app</span> <span class="o">=</span> <span class="n">ProxyFix</span><span class="p">(</span><span class="n">app</span><span class="o">.</span><span class="n">wsgi_app</span><span class="p">,</span> <span class="n">num_proxies</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">limiter</span> <span class="o">=</span> <span class="n">Limiter</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">key_func</span><span class="o">=</span><span class="n">get_remote_address</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="api">
+<h2>API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="core">
+<h3>Core<a class="headerlink" href="#core" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="flask_limiter.Limiter">
+<em class="property">class </em><code class="sig-prename descclassname">flask_limiter.</code><code class="sig-name descname">Limiter</code><span class="sig-paren">(</span><em class="sig-param">app=None</em>, <em class="sig-param">key_func=None</em>, <em class="sig-param">global_limits=[]</em>, <em class="sig-param">default_limits=[]</em>, <em class="sig-param">default_limits_per_method=False</em>, <em class="sig-param">application_limits=[]</em>, <em class="sig-param">headers_enabled=False</em>, <em class="sig-param">strategy=None</em>, <em class="sig-param">storage_uri=None</em>, <em class="sig-param">storage_options={}</em>, <em class="sig-param">auto_check=True</em>, <em class="sig-param">swallow_errors=False</em>, <em class="sig-param">in_memory_fallback=[]</em>, <em class="sig-param">in_memory_fallback_enabled=False</em>, <em class="sig-param">retry_after=None</em>, <em class="sig-param">key_prefix=''</em>, <em class="sig-param">enabled=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/flask_limiter/extension.html#Limiter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flask_limiter.Limiter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.8)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>app</strong> – <a class="reference external" href="https://flask.palletsprojects.com/en/1.1.x/api/#flask.Flask" title="(in Flask v1.1.x)"><code class="xref py py-class docutils literal notranslate"><span class="pre">flask.Flask</span></code></a> instance to initialize the extension
+with.</p></li>
+<li><p><strong>default_limits</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a>) – a variable list of strings or callables returning strings denoting global
+limits to apply to all routes. <a class="reference internal" href="#ratelimit-string"><span class="std std-ref">Rate limit string notation</span></a> for  more details.</p></li>
+<li><p><strong>default_limits_per_method</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a>) – whether default limits are applied per method, per route or as a combination
+of all method per route.</p></li>
+<li><p><strong>application_limits</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a>) – a variable list of strings or callables returning strings for limits that
+are applied to the entire application (i.e a shared limit for all routes)</p></li>
+<li><p><strong>key_func</strong> (<em>function</em>) – a callable that returns the domain to rate limit by.</p></li>
+<li><p><strong>headers_enabled</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a>) – whether <code class="docutils literal notranslate"><span class="pre">X-RateLimit</span></code> response headers are written.</p></li>
+<li><p><strong>strategy</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – the strategy to use. refer to <a class="reference internal" href="#ratelimit-strategy"><span class="std std-ref">Rate limiting strategies</span></a></p></li>
+<li><p><strong>storage_uri</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – the storage location. refer to <a class="reference internal" href="#ratelimit-conf"><span class="std std-ref">Configuration</span></a></p></li>
+<li><p><strong>storage_options</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.8)"><em>dict</em></a>) – kwargs to pass to the storage implementation upon
+instantiation.</p></li>
+<li><p><strong>auto_check</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a>) – whether to automatically check the rate limit in the before_request
+chain of the application. default <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
+<li><p><strong>swallow_errors</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a>) – whether to swallow errors when hitting a rate limit.
+An exception will still be logged. default <code class="docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p><strong>in_memory_fallback</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a>) – a variable list of strings or callables returning strings denoting fallback
+limits to apply when the storage is down.</p></li>
+<li><p><strong>in_memory_fallback_enabled</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a>) – simply falls back to in memory storage
+when the main storage is down and inherits the original limits.</p></li>
+<li><p><strong>key_prefix</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – prefix prepended to rate limiter keys.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="flask_limiter.Limiter.check">
+<code class="sig-name descname">check</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/flask_limiter/extension.html#Limiter.check"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flask_limiter.Limiter.check" title="Permalink to this definition">¶</a></dt>
+<dd><p>check the limits for the current request</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p>RateLimitExceeded</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="flask_limiter.Limiter.exempt">
+<code class="sig-name descname">exempt</code><span class="sig-paren">(</span><em class="sig-param">obj</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/flask_limiter/extension.html#Limiter.exempt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flask_limiter.Limiter.exempt" title="Permalink to this definition">¶</a></dt>
+<dd><p>decorator to mark a view or all views in a blueprint as exempt from rate limits.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="flask_limiter.Limiter.init_app">
+<code class="sig-name descname">init_app</code><span class="sig-paren">(</span><em class="sig-param">app</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/flask_limiter/extension.html#Limiter.init_app"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flask_limiter.Limiter.init_app" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>app</strong> – <a class="reference external" href="https://flask.palletsprojects.com/en/1.1.x/api/#flask.Flask" title="(in Flask v1.1.x)"><code class="xref py py-class docutils literal notranslate"><span class="pre">flask.Flask</span></code></a> instance to rate limit.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="flask_limiter.Limiter.limit">
+<code class="sig-name descname">limit</code><span class="sig-paren">(</span><em class="sig-param">limit_value</em>, <em class="sig-param">key_func=None</em>, <em class="sig-param">per_method=False</em>, <em class="sig-param">methods=None</em>, <em class="sig-param">error_message=None</em>, <em class="sig-param">exempt_when=None</em>, <em class="sig-param">override_defaults=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/flask_limiter/extension.html#Limiter.limit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flask_limiter.Limiter.limit" title="Permalink to this definition">¶</a></dt>
+<dd><p>decorator to be used for rate limiting individual routes or blueprints.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>limit_value</strong> – rate limit string or a callable that returns a string.
+<a class="reference internal" href="#ratelimit-string"><span class="std std-ref">Rate limit string notation</span></a> for more details.</p></li>
+<li><p><strong>key_func</strong> (<em>function</em>) – function/lambda to extract the unique identifier for
+the rate limit. defaults to remote address of the request.</p></li>
+<li><p><strong>per_method</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a>) – whether the limit is sub categorized into the http
+method of the request.</p></li>
+<li><p><strong>methods</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a>) – if specified, only the methods in this list will be rate
+limited (default: None).</p></li>
+<li><p><strong>error_message</strong> – string (or callable that returns one) to override the
+error message used in the response.</p></li>
+<li><p><strong>exempt_when</strong> (<em>function</em>) – function/lambda used to decide if the rate limit
+should skipped.</p></li>
+<li><p><strong>override_defaults</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a>) – whether the decorated limit overrides the default
+limits. (default: True)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="flask_limiter.Limiter.request_filter">
+<code class="sig-name descname">request_filter</code><span class="sig-paren">(</span><em class="sig-param">fn</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/flask_limiter/extension.html#Limiter.request_filter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flask_limiter.Limiter.request_filter" title="Permalink to this definition">¶</a></dt>
+<dd><p>decorator to mark a function as a filter to be executed
+to check if the request is exempt from rate limiting.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="flask_limiter.Limiter.reset">
+<code class="sig-name descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/flask_limiter/extension.html#Limiter.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flask_limiter.Limiter.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>resets the storage if it supports being reset</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="flask_limiter.Limiter.shared_limit">
+<code class="sig-name descname">shared_limit</code><span class="sig-paren">(</span><em class="sig-param">limit_value</em>, <em class="sig-param">scope</em>, <em class="sig-param">key_func=None</em>, <em class="sig-param">error_message=None</em>, <em class="sig-param">exempt_when=None</em>, <em class="sig-param">override_defaults=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/flask_limiter/extension.html#Limiter.shared_limit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flask_limiter.Limiter.shared_limit" title="Permalink to this definition">¶</a></dt>
+<dd><p>decorator to be applied to multiple routes sharing the same rate limit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>limit_value</strong> – rate limit string or a callable that returns a string.
+<a class="reference internal" href="#ratelimit-string"><span class="std std-ref">Rate limit string notation</span></a> for more details.</p></li>
+<li><p><strong>scope</strong> – a string or callable that returns a string
+for defining the rate limiting scope.</p></li>
+<li><p><strong>key_func</strong> (<em>function</em>) – function/lambda to extract the unique identifier for
+the rate limit. defaults to remote address of the request.</p></li>
+<li><p><strong>error_message</strong> – string (or callable that returns one) to override the
+error message used in the response.</p></li>
+<li><p><strong>exempt_when</strong> (<em>function</em>) – function/lambda used to decide if the rate limit
+should skipped.</p></li>
+<li><p><strong>override_defaults</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a>) – whether the decorated limit overrides the default
+limits. (default: True)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="exceptions">
+<h3>Exceptions<a class="headerlink" href="#exceptions" title="Permalink to this headline">¶</a></h3>
+<dl class="exception">
+<dt id="flask_limiter.RateLimitExceeded">
+<em class="property">exception </em><code class="sig-prename descclassname">flask_limiter.</code><code class="sig-name descname">RateLimitExceeded</code><span class="sig-paren">(</span><em class="sig-param">limit</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/flask_limiter/errors.html#RateLimitExceeded"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flask_limiter.RateLimitExceeded" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://werkzeug.palletsprojects.com/en/1.0.x/exceptions/#werkzeug.exceptions.TooManyRequests" title="(in Werkzeug v1.0.x)"><code class="xref py py-class docutils literal notranslate"><span class="pre">werkzeug.exceptions.TooManyRequests</span></code></a></p>
+<p>exception raised when a rate limit is hit.
+The exception results in <code class="docutils literal notranslate"><span class="pre">abort(429)</span></code> being called.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-flask_limiter.util">
+<span id="utils"></span><h3>Utils<a class="headerlink" href="#module-flask_limiter.util" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="flask_limiter.util.get_ipaddr">
+<code class="sig-prename descclassname">flask_limiter.util.</code><code class="sig-name descname">get_ipaddr</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/flask_limiter/util.html#get_ipaddr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flask_limiter.util.get_ipaddr" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the ip address for the current request (or 127.0.0.1 if none found)
+based on the X-Forwarded-For headers.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="flask_limiter.util.get_remote_address">
+<code class="sig-prename descclassname">flask_limiter.util.</code><code class="sig-name descname">get_remote_address</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/flask_limiter/util.html#get_remote_address"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flask_limiter.util.get_remote_address" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the ip address for the current request (or 127.0.0.1 if none found)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="changelog">
+<h2>Changelog<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="id3">
+<h3>1.2.1 2020-02-26<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Bug fix</p>
+<ul>
+<li><p>Syntax error in version 1.2.0 when application limits are provided through
+configuration file (<a class="reference external" href="https://github.com/alisaifee/flask-limiter/issues/241">Issue 241</a>)</p></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="id4">
+<h3>1.2.0 2020-02-25<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Add <cite>override_defaults</cite> argument to decorated limits to allow combinined defaults with decorated limits.</p></li>
+<li><p>Add configuration parameter RATELIMIT_DEFAULTS_PER_METHOD to control whether defaults are applied per method.</p></li>
+<li><p>Add support for in memory fallback without override (<a class="reference external" href="https://github.com/alisaifee/flask-limiter/pull/236">Pull Request 236</a>)</p></li>
+<li><p>Bug fix</p>
+<ul>
+<li><p>Ensure defaults are enforced when decorated limits are skipped (<a class="reference external" href="https://github.com/alisaifee/flask-limiter/issues/238">Issue 238</a>)</p></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="id5">
+<h3>1.1.0 2019-10-02<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Provide Rate limit information with Exception (<a class="reference external" href="https://github.com/alisaifee/flask-limiter/pull/202">Pull Request 202</a>)</p></li>
+<li><p>Respect existing Retry-After header values (<a class="reference external" href="https://github.com/alisaifee/flask-limiter/pull/143">Pull Request 143</a>)</p></li>
+<li><p>Documentation improvements</p></li>
+</ul>
+</div>
+<div class="section" id="id6">
+<h3>1.0.1 2017-12-08<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Bug fix</p>
+<ul>
+<li><p>Duplicate rate limits applied via application limits (<a class="reference external" href="https://github.com/alisaifee/flask-limiter/issues/108">Issue 108</a>)</p></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="id7">
+<h3>1.0.0 2017-11-06<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Improved documentation for handling ip addresses for applications behind proxiues (<a class="reference external" href="https://github.com/alisaifee/flask-limiter/issues/41">Issue 41</a>)</p></li>
+<li><p>Execute rate limits for decorated routes in decorator instead of <cite>before_request</cite>  (<a class="reference external" href="https://github.com/alisaifee/flask-limiter/issues/67">Issue 67</a>)</p></li>
+<li><p>Bug Fix</p>
+<ul>
+<li><p>Python 3.5 Errors (<a class="reference external" href="https://github.com/alisaifee/flask-limiter/issues/82">Issue 82</a>)</p></li>
+<li><p>RATELIMIT_KEY_PREFIX configuration constant not used (<a class="reference external" href="https://github.com/alisaifee/flask-limiter/issues/88">Issue 88</a>)</p></li>
+<li><p>Can’t use dynamic limit in <cite>default_limits</cite> (<a class="reference external" href="https://github.com/alisaifee/flask-limiter/issues/94">Issue 94</a>)</p></li>
+<li><p>Retry-After header always zero when using key prefix (<a class="reference external" href="https://github.com/alisaifee/flask-limiter/issues/99">Issue 99</a>)</p></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="id8">
+<h3>0.9.5.1 2017-08-18<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Upgrade versioneer</p></li>
+</ul>
+</div>
+<div class="section" id="id9">
+<h3>0.9.5 2017-07-26<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Add support for key prefixes</p></li>
+</ul>
+</div>
+<div class="section" id="id10">
+<h3>0.9.4 2017-05-01<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Implemented application wide shared limits</p></li>
+</ul>
+</div>
+<div class="section" id="id11">
+<h3>0.9.3 2016-03-14<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Allow <cite>reset</cite> of limiter storage if available</p></li>
+</ul>
+</div>
+<div class="section" id="id12">
+<h3>0.9.2 2016-03-04<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Deprecation warning for default <cite>key_func</cite> <cite>get_ipaddr</cite></p></li>
+<li><p>Support for <cite>Retry-After</cite> header</p></li>
+</ul>
+</div>
+<div class="section" id="id13">
+<h3>0.9.1 2015-11-21<a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Re-expose <cite>enabled</cite> property on <cite>Limiter</cite> instance.</p></li>
+</ul>
+</div>
+<div class="section" id="id14">
+<h3>0.9 2015-11-13<a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>In-memory fallback option for unresponsive storage</p></li>
+<li><p>Rate limit exemption option per limit</p></li>
+</ul>
+</div>
+<div class="section" id="id15">
+<h3>0.8.5 2015-10-05<a class="headerlink" href="#id15" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Bug fix for reported issues of missing (limits) dependency upon installation.</p></li>
+</ul>
+</div>
+<div class="section" id="id16">
+<h3>0.8.4 2015-10-03<a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Documentation tweaks.</p></li>
+</ul>
+</div>
+<div class="section" id="id17">
+<h3>0.8.2 2015-09-17<a class="headerlink" href="#id17" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Remove outdated files from egg</p></li>
+</ul>
+</div>
+<div class="section" id="id18">
+<h3>0.8.1 2015-08-06<a class="headerlink" href="#id18" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Fixed compatibility with latest version of <strong>Flask-Restful</strong></p></li>
+</ul>
+</div>
+<div class="section" id="id19">
+<h3>0.8 2015-06-07<a class="headerlink" href="#id19" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>No functional change</p></li>
+</ul>
+</div>
+<div class="section" id="id20">
+<h3>0.7.9 2015-04-02<a class="headerlink" href="#id20" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Bug fix for case sensitive <cite>methods</cite> whitelist for <cite>limits</cite> decorator</p></li>
+</ul>
+</div>
+<div class="section" id="id21">
+<h3>0.7.8 2015-03-20<a class="headerlink" href="#id21" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Hotfix for dynamic limits with blueprints</p></li>
+<li><p>Undocumented feature to pass storage options to underlying storage backend.</p></li>
+</ul>
+</div>
+<div class="section" id="id22">
+<h3>0.7.6 2015-03-02<a class="headerlink" href="#id22" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p><cite>methods</cite> keyword argument for <cite>limits</cite> decorator to specify specific http
+methods to apply the rate limit to.</p></li>
+</ul>
+</div>
+<div class="section" id="id23">
+<h3>0.7.5 2015-02-16<a class="headerlink" href="#id23" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p><a class="reference external" href="http://flask-limiter.readthedocs.org/en/stable/#custom-error-messages">Custom error messages</a>.</p></li>
+</ul>
+</div>
+<div class="section" id="id25">
+<h3>0.7.4 2015-02-03<a class="headerlink" href="#id25" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Use Werkzeug TooManyRequests as the exception raised when available.</p></li>
+</ul>
+</div>
+<div class="section" id="id26">
+<h3>0.7.3 2015-01-30<a class="headerlink" href="#id26" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Bug Fix</p>
+<ul>
+<li><dl class="simple">
+<dt>Fix for version comparison when monkey patching Werkzeug</dt><dd><p>(<a class="reference external" href="https://github.com/alisaifee/flask-limiter/issues/24">Issue 24</a>)</p>
+</dd>
+</dl>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="id27">
+<h3>0.7.1 2015-01-09<a class="headerlink" href="#id27" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Refactor core storage &amp; ratelimiting strategy out into the <a class="reference external" href="http://github.com/alisaifee/limits">limits</a> package.</p></li>
+<li><p>Remove duplicate hits when stacked rate limits are in use and a rate limit is hit.</p></li>
+</ul>
+</div>
+<div class="section" id="id28">
+<h3>0.7 2015-01-09<a class="headerlink" href="#id28" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Refactoring of RedisStorage for extensibility (<a class="reference external" href="https://github.com/alisaifee/flask-limiter/issues/18">Issue 18</a>)</p></li>
+<li><p>Bug fix: Correct default setting for enabling rate limit headers. (<a class="reference external" href="https://github.com/alisaifee/flask-limiter/issues/22">Issue 22</a>)</p></li>
+</ul>
+</div>
+<div class="section" id="id29">
+<h3>0.6.6 2014-10-21<a class="headerlink" href="#id29" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Bug fix</p>
+<ul>
+<li><p>Fix for responses slower than rate limiting window.
+(<a class="reference external" href="https://github.com/alisaifee/flask-limiter/issues/17">Issue 17</a>.)</p></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="id30">
+<h3>0.6.5 2014-10-01<a class="headerlink" href="#id30" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Bug fix: in memory storage thread safety</p></li>
+</ul>
+</div>
+<div class="section" id="id31">
+<h3>0.6.4 2014-08-31<a class="headerlink" href="#id31" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Support for manually triggering rate limit check</p></li>
+</ul>
+</div>
+<div class="section" id="id32">
+<h3>0.6.3 2014-08-26<a class="headerlink" href="#id32" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Header name overrides</p></li>
+</ul>
+</div>
+<div class="section" id="id33">
+<h3>0.6.2 2014-07-13<a class="headerlink" href="#id33" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p><a class="reference external" href="http://flask-limiter.readthedocs.org/en/latest/#rate-limiting-all-routes-in-a-flask-blueprint">Rate limiting for blueprints</a></p></li>
+</ul>
+</div>
+<div class="section" id="id34">
+<h3>0.6.1 2014-07-11<a class="headerlink" href="#id34" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>per http method rate limit separation (<a class="reference external" href="http://flask-limiter.readthedocs.org/en/latest/index.html#using-flask-pluggable-views">Recipe</a>)</p></li>
+<li><p>documentation improvements</p></li>
+</ul>
+</div>
+<div class="section" id="id35">
+<h3>0.6 2014-06-24<a class="headerlink" href="#id35" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p><a class="reference external" href="http://flask-limiter.readthedocs.org/en/latest/index.html#ratelimit-decorator-shared-limit">Shared limits between routes</a></p></li>
+</ul>
+</div>
+<div class="section" id="id36">
+<h3>0.5 2014-06-13<a class="headerlink" href="#id36" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p><a class="reference external" href="http://flask-limiter.readthedocs.org/en/latest/index.html#ratelimit-decorator-request-filter">Request Filters</a></p></li>
+</ul>
+</div>
+<div class="section" id="id37">
+<h3>0.4.4 2014-06-13<a class="headerlink" href="#id37" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Bug fix</p>
+<ul>
+<li><p>Werkzeug &lt; 0.9 Compatibility
+(<a class="reference external" href="https://github.com/alisaifee/flask-limiter/issues/6">Issue 6</a>.)</p></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="id38">
+<h3>0.4.3 2014-06-12<a class="headerlink" href="#id38" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Hotfix : use HTTPException instead of abort to play well with other
+extensions.</p></li>
+</ul>
+</div>
+<div class="section" id="id39">
+<h3>0.4.2 2014-06-12<a class="headerlink" href="#id39" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Allow configuration overrides via extension constructor</p></li>
+</ul>
+</div>
+<div class="section" id="id40">
+<h3>0.4.1 2014-06-04<a class="headerlink" href="#id40" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Improved implementation of moving-window X-RateLimit-Reset value.</p></li>
+</ul>
+</div>
+<div class="section" id="id41">
+<h3>0.4 2014-05-28<a class="headerlink" href="#id41" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p><a class="reference external" href="http://flask-limiter.readthedocs.org/en/latest/#rate-limiting-headers">Rate limiting headers</a></p></li>
+</ul>
+</div>
+<div class="section" id="id43">
+<h3>0.3.2 2014-05-26<a class="headerlink" href="#id43" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Bug fix</p>
+<ul>
+<li><p>Memory leak when using <code class="docutils literal notranslate"><span class="pre">Limiter.storage.MemoryStorage</span></code>
+(<a class="reference external" href="https://github.com/alisaifee/flask-limiter/issues/4">Issue 4</a>.)</p></li>
+</ul>
+</li>
+<li><p>Improved test coverage</p></li>
+</ul>
+</div>
+<div class="section" id="id44">
+<h3>0.3.1 2014-02-20<a class="headerlink" href="#id44" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Strict version requirement on six</p></li>
+<li><p>documentation tweaks</p></li>
+</ul>
+</div>
+<div class="section" id="id45">
+<h3>0.3.0 2014-02-19<a class="headerlink" href="#id45" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>improved logging support for multiple handlers</p></li>
+<li><p>allow callables to be passed to <code class="docutils literal notranslate"><span class="pre">Limiter.limit</span></code> decorator to dynamically
+load rate limit strings.</p></li>
+<li><p>add a global kill switch in flask config for all rate limits.</p></li>
+<li><p>Bug fixes</p>
+<ul>
+<li><p>default key function for rate limit domain wasn’t accounting for
+X-Forwarded-For header.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="id46">
+<h3>0.2.2 2014-02-18<a class="headerlink" href="#id46" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>add new decorator to exempt routes from limiting.</p></li>
+<li><p>Bug fixes</p>
+<ul>
+<li><p>versioneer.py wasn’t included in manifest.</p></li>
+<li><p>configuration string for strategy was out of sync with docs.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="id47">
+<h3>0.2.1 2014-02-15<a class="headerlink" href="#id47" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>python 2.6 support via counter backport</p></li>
+<li><p>source docs.</p></li>
+</ul>
+</div>
+<div class="section" id="id48">
+<h3>0.2 2014-02-15<a class="headerlink" href="#id48" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Implemented configurable strategies for rate limiting.</p></li>
+<li><p>Bug fixes</p>
+<ul>
+<li><p>better locking for in-memory storage</p></li>
+<li><p>multi threading support for memcached storage</p></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="id49">
+<h3>0.1.1 2014-02-14<a class="headerlink" href="#id49" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Bug fixes</p>
+<ul>
+<li><p>fix initializing the extension without an app</p></li>
+<li><p>don’t rate limit static files</p></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="id50">
+<h3>0.1.0 2014-02-13<a class="headerlink" href="#id50" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>first release.</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="http://redis.io/commands/INCR">Redis rate limiting pattern #2</a></p></li>
+<li><p><a class="reference external" href="https://github.com/DomainTools/rate-limit">DomainTools redis rate limiter</a></p></li>
+<li><p><a class="reference external" href="https://limits.readthedocs.org">limits: python rate limiting utilities</a></p></li>
+</ul>
+</div>
+<div class="section" id="contributions">
+<h2>Contributions<a class="headerlink" href="#contributions" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/timotheeg">Timothee Groleau</a></p></li>
+<li><p><a class="reference external" href="https://github.com/zehua">Zehua Liu</a></p></li>
+<li><p><a class="reference external" href="https://github.com/g-p-g">Guilherme Polo</a></p></li>
+<li><p><a class="reference external" href="https://github.com/mtsgrd">Mattias Granlund</a></p></li>
+<li><p><a class="reference external" href="https://github.com/joshfriend">Josh Friend</a></p></li>
+<li><p><a class="reference external" href="https://github.com/samihiltunen">Sami Hiltunen</a></p></li>
+<li><p><a class="reference external" href="https://github.com/henningpeters">Henning Peters</a></p></li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="#">
+              <img class="logo" src="_static/tap-logo.png" alt="Logo"/>
+            </a></p><h3>About</h3>
+<p>
+  Flask-Limiter provides rate limiting features to flask routes.
+  It has support for a configurable backend for storage
+  with current implementations for in-memory, redis and memcache.
+</p>
+<h3>Useful Links</h3>
+<ul>
+  <li><a href="http://pypi.python.org/pypi/Flask-Limiter">Flask-Limiter @ PyPI</a></li>
+  <li><a href="http://github.com/alisaifee/flask-limiter">Flask-Limiter @ github</a></li>
+  <li><a href="http://github.com/alisaifee/flask-limiter/issues">Issue Tracker</a></li>
+</ul>
+<!--Start of Zopim Live Chat Script-->
+<script type="text/javascript">
+  window.$zopim||(function(d,s){var z=$zopim=function(c){z._.push(c)},$=z.s=
+    d.createElement(s),e=d.getElementsByTagName(s)[0];z.set=function(o){z.set.
+      _.push(o)};z._=[];z.set._=[];$.async=!0;$.setAttribute('charset','utf-8');
+    $.src='//v2.zopim.com/?1v0eqqnJr8gbT2CcrbTs0U9wWGlosnWN';z.t=+new Date;$.
+    type='text/javascript';e.parentNode.insertBefore($,e)})(document,'script');
+</script>
+<!--End of Zopim Live Chat Script-->
+  <h3><a href="#">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Flask-Limiter</a><ul>
+<li><a class="reference internal" href="#usage">Usage</a><ul>
+<li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#quick-start">Quick start</a></li>
+<li><a class="reference internal" href="#the-flask-limiter-extension">The Flask-Limiter extension</a></li>
+<li><a class="reference internal" href="#rate-limit-domain">Rate Limit Domain</a></li>
+<li><a class="reference internal" href="#decorators">Decorators</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#configuration">Configuration</a></li>
+<li><a class="reference internal" href="#rate-limit-string-notation">Rate limit string notation</a><ul>
+<li><a class="reference internal" href="#examples">Examples</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#rate-limiting-strategies">Rate limiting strategies</a><ul>
+<li><a class="reference internal" href="#fixed-window">Fixed Window</a></li>
+<li><a class="reference internal" href="#fixed-window-with-elastic-expiry">Fixed Window with Elastic Expiry</a></li>
+<li><a class="reference internal" href="#moving-window">Moving Window</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#rate-limiting-headers">Rate-limiting Headers</a></li>
+<li><a class="reference internal" href="#recipes">Recipes</a><ul>
+<li><a class="reference internal" href="#rate-limit-key-functions">Rate Limit Key Functions</a></li>
+<li><a class="reference internal" href="#custom-rate-limit-exceeded-responses">Custom Rate limit exceeded responses</a></li>
+<li><a class="reference internal" href="#using-flask-pluggable-views">Using Flask Pluggable Views</a></li>
+<li><a class="reference internal" href="#rate-limiting-all-routes-in-a-flask-blueprint">Rate limiting all routes in a <code class="xref py py-class docutils literal notranslate"><span class="pre">flask.Blueprint</span></code></a></li>
+<li><a class="reference internal" href="#logging">Logging</a></li>
+<li><a class="reference internal" href="#custom-error-messages">Custom error messages</a></li>
+<li><a class="reference internal" href="#deploying-an-application-behind-a-proxy">Deploying an application behind a proxy</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#api">API</a><ul>
+<li><a class="reference internal" href="#core">Core</a></li>
+<li><a class="reference internal" href="#exceptions">Exceptions</a></li>
+<li><a class="reference internal" href="#module-flask_limiter.util">Utils</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#changelog">Changelog</a><ul>
+<li><a class="reference internal" href="#id3">1.2.1 2020-02-26</a></li>
+<li><a class="reference internal" href="#id4">1.2.0 2020-02-25</a></li>
+<li><a class="reference internal" href="#id5">1.1.0 2019-10-02</a></li>
+<li><a class="reference internal" href="#id6">1.0.1 2017-12-08</a></li>
+<li><a class="reference internal" href="#id7">1.0.0 2017-11-06</a></li>
+<li><a class="reference internal" href="#id8">0.9.5.1 2017-08-18</a></li>
+<li><a class="reference internal" href="#id9">0.9.5 2017-07-26</a></li>
+<li><a class="reference internal" href="#id10">0.9.4 2017-05-01</a></li>
+<li><a class="reference internal" href="#id11">0.9.3 2016-03-14</a></li>
+<li><a class="reference internal" href="#id12">0.9.2 2016-03-04</a></li>
+<li><a class="reference internal" href="#id13">0.9.1 2015-11-21</a></li>
+<li><a class="reference internal" href="#id14">0.9 2015-11-13</a></li>
+<li><a class="reference internal" href="#id15">0.8.5 2015-10-05</a></li>
+<li><a class="reference internal" href="#id16">0.8.4 2015-10-03</a></li>
+<li><a class="reference internal" href="#id17">0.8.2 2015-09-17</a></li>
+<li><a class="reference internal" href="#id18">0.8.1 2015-08-06</a></li>
+<li><a class="reference internal" href="#id19">0.8 2015-06-07</a></li>
+<li><a class="reference internal" href="#id20">0.7.9 2015-04-02</a></li>
+<li><a class="reference internal" href="#id21">0.7.8 2015-03-20</a></li>
+<li><a class="reference internal" href="#id22">0.7.6 2015-03-02</a></li>
+<li><a class="reference internal" href="#id23">0.7.5 2015-02-16</a></li>
+<li><a class="reference internal" href="#id25">0.7.4 2015-02-03</a></li>
+<li><a class="reference internal" href="#id26">0.7.3 2015-01-30</a></li>
+<li><a class="reference internal" href="#id27">0.7.1 2015-01-09</a></li>
+<li><a class="reference internal" href="#id28">0.7 2015-01-09</a></li>
+<li><a class="reference internal" href="#id29">0.6.6 2014-10-21</a></li>
+<li><a class="reference internal" href="#id30">0.6.5 2014-10-01</a></li>
+<li><a class="reference internal" href="#id31">0.6.4 2014-08-31</a></li>
+<li><a class="reference internal" href="#id32">0.6.3 2014-08-26</a></li>
+<li><a class="reference internal" href="#id33">0.6.2 2014-07-13</a></li>
+<li><a class="reference internal" href="#id34">0.6.1 2014-07-11</a></li>
+<li><a class="reference internal" href="#id35">0.6 2014-06-24</a></li>
+<li><a class="reference internal" href="#id36">0.5 2014-06-13</a></li>
+<li><a class="reference internal" href="#id37">0.4.4 2014-06-13</a></li>
+<li><a class="reference internal" href="#id38">0.4.3 2014-06-12</a></li>
+<li><a class="reference internal" href="#id39">0.4.2 2014-06-12</a></li>
+<li><a class="reference internal" href="#id40">0.4.1 2014-06-04</a></li>
+<li><a class="reference internal" href="#id41">0.4 2014-05-28</a></li>
+<li><a class="reference internal" href="#id43">0.3.2 2014-05-26</a></li>
+<li><a class="reference internal" href="#id44">0.3.1 2014-02-20</a></li>
+<li><a class="reference internal" href="#id45">0.3.0 2014-02-19</a></li>
+<li><a class="reference internal" href="#id46">0.2.2 2014-02-18</a></li>
+<li><a class="reference internal" href="#id47">0.2.1 2014-02-15</a></li>
+<li><a class="reference internal" href="#id48">0.2 2014-02-15</a></li>
+<li><a class="reference internal" href="#id49">0.1.1 2014-02-14</a></li>
+<li><a class="reference internal" href="#id50">0.1.0 2014-02-13</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#references">References</a></li>
+<li><a class="reference internal" href="#contributions">Contributions</a></li>
+</ul>
+</li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+  <div class="footer">
+    &copy; Copyright 2014, Ali-Akber Saifee.
+    Created using <a href="http://sphinx.pocoo.org/">Sphinx</a>.
+  </div>
+  
+  </div>
+  
+  </body>
+</html>

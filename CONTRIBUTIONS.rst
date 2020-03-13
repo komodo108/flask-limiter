@@ -8,3 +8,4 @@ Contributions
 * `Josh Friend <https://github.com/joshfriend>`_
 * `Sami Hiltunen <https://github.com/samihiltunen>`_
 * `Henning Peters <https://github.com/henningpeters>`_
+* `Paul <https://github.com/komodo108>`_

@@ -12,6 +12,8 @@ Flask-Limiter
 *************
 |travis-ci| |coveralls| |pypi| |license|
 
+This is a *fork* for Flask-Limiter providing support for custom abort codes.
+
 Flask-Limiter provides rate limiting features to flask routes.
 It has support for a configurable backend for storage
 with current implementations for in-memory, redis and memcache.
