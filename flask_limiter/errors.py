@@ -59,8 +59,8 @@ class RateLimitExceeded(werkzeug_exception):
                 exception = exceptions.NotImplemented	
 
             # Update body & headers
-            body = exception.get_body()
-            headers = exception.get_headers()
+            body = exception().get_body()
+            headers = exception().get_headers()
 
         # Get the description
         if limit.error_message:
