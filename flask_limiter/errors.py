@@ -74,4 +74,4 @@ class RateLimitExceeded(werkzeug_exception):
             # Update body & headers
             self.body = exception.get_body()
             self.headers = exception.get_headers()
-        super(RateLimitExceeded, self).__init__(description=self.description, response=Response(self.body, code, self.headers))
+        super(RateLimitExceeded, self).__init__(description=self.description, response=Response(self.body, self.code, self.headers))
